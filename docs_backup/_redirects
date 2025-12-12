@@ -1,0 +1,3 @@
+# Redirects for Netlify Drop
+/              /viewer/app.html  200
+/app.html      /viewer/app.html  200

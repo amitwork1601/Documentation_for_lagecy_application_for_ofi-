@@ -1,0 +1,56 @@
+# Configuration for Codebase Documentation Generator
+
+# Repository Settings
+repositories:
+  - name: backend
+    url: "https://github.com/ultrapremiumdirect/backend.git"
+    local_path: "./repo_src/backend"
+  - name: frontend
+    url: "https://github.com/ultrapremiumdirect/frontend.git"
+    local_path: "./repo_src/frontend"
+  - name: cms
+    url: "https://github.com/ultrapremiumdirect/cms.git"
+    local_path: "./repo_src/cms"
+
+# Output Directory
+output_dir: "./docs"
+
+# AI Enhancement (optional)
+ai_enhancement:
+  enabled: true
+  provider: "claude"
+  api_key: "YOUR_CLAUDE_API_KEY"
+  model: "claude-sonnet-4-5-20250929"  # Latest Claude Sonnet 4 model
+
+# Exclude Patterns (glob format)
+exclude:
+  - "node_modules"
+  - "vendor"
+  - ".git"
+  - ".github"
+  - "dist"
+  - "build"
+  - "__pycache__"
+  - "*.lock"
+  - "*.log"
+
+# Language Specific Settings (optional customization)
+languages:
+  php:
+    extensions: [".php"]
+  javascript:
+    extensions: [".js", ".jsx", ".mjs", ".cjs"]
+  typescript:
+    extensions: [".ts", ".tsx"]
+  vue:
+    extensions: [".vue"]
+  mdx:
+    extensions: [".mdx"]
+  shell:
+    extensions: [".sh", ".bash"]
+  docker:
+    extensions: ["Dockerfile", ".dockerfile"]
+  twig:
+    extensions: [".twig"]
+  gherkin:
+    extensions: [".feature"]

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Documentation Explorer</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <header class="hero">
+      <div class="hero__content">
+        <p class="hero__eyebrow">MkDocs Explorer</p>
+        <h1>Search, filter, and preview generated documentation.</h1>
+        <p class="hero__lede">
+          Use the global search and category filters to jump to the exact
+          controller, service, or plugin without leaving MkDocs.
+        </p>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="panel panel--filters">
+        <div class="field-group">
+          <label for="searchInput">Search documentation</label>
+          <div class="searchbox">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                d="M15.5 14h-.79l-.28-.27a6 6 0 10-.71.71l.27.28v.79L20 21.49 21.49 20zm-6 0A4.5 4.5 0 1114 9.5 4.5 4.5 0 019.5 14z"
+              />
+            </svg>
+            <input
+              type="search"
+              id="searchInput"
+              placeholder="Search by title, summary, file name..."
+              autocomplete="off"
+            />
+          </div>
+        </div>
+
+        <div class="field-grid">
+          <div class="field-group">
+            <label for="categoryFilter">Category</label>
+            <select id="categoryFilter">
+              <option value="all">All categories</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label for="repoFilter">Repository</label>
+            <select id="repoFilter">
+              <option value="all">All repositories</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label for="sortOrder">Sort</label>
+          <select id="sortOrder">
+            <option value="title">Alphabetical (A → Z)</option>
+            <option value="repo">Repository</option>
+            <option value="category">Category</option>
+          </select>
+        </div>
+      </section>
+
+      <section class="panel panel--results">
+        <div class="panel__header">
+          <div>
+            <h2>Documentation results</h2>
+            <p id="resultsCount" class="muted">Loading…</p>
+          </div>
+          <button id="clearFilters" type="button" class="link-button">
+            Clear filters
+          </button>
+        </div>
+        <div id="resultsList" class="results-list" role="list"></div>
+      </section>
+
+      <section class="panel panel--preview">
+        <div class="panel__header">
+          <div>
+            <h2 id="previewTitle">Select a document</h2>
+            <p id="previewMeta" class="muted">
+              Choose an entry from the left to see its contents
+            </p>
+          </div>
+        </div>
+        <article id="docPreview" class="preview markdown-body">
+          <p class="muted">
+            The full Markdown file renders here once you pick a document.
+          </p>
+        </article>
+      </section>
+    </main>
+
+    <noscript>
+      <p class="noscript">
+        This viewer requires JavaScript to load <code>docs_index.json</code>.
+      </p>
+    </noscript>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
+

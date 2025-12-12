@@ -1,0 +1,53 @@
+# Configuration for Codebase Documentation Generator - TEST VERSION
+
+# Repository Settings - Using local test_repo
+repositories:
+  - name: test_backend
+    url: "file://./test_repo/backend"
+    local_path: "./test_repo/backend"
+  - name: test_frontend
+    url: "file://./test_repo/frontend"
+    local_path: "./test_repo/frontend"
+
+# Output Directory
+output_dir: "./docs"
+
+# AI Enhancement (optional)
+ai_enhancement:
+  enabled: true
+  provider: "perplexity"
+  api_key: "YOUR_PERPLEXITY_API_KEY"
+  model: "llama-3.1-sonar-large-128k-online"  # Perplexity model
+
+# Exclude Patterns (glob format)
+exclude:
+  - "node_modules"
+  - "vendor"
+  - ".git"
+  - ".github"
+  - "dist"
+  - "build"
+  - "__pycache__"
+  - "*.lock"
+  - "*.log"
+
+# Language Specific Settings (optional customization)
+languages:
+  php:
+    extensions: [".php"]
+  javascript:
+    extensions: [".js", ".jsx", ".mjs", ".cjs"]
+  typescript:
+    extensions: [".ts", ".tsx"]
+  vue:
+    extensions: [".vue"]
+  mdx:
+    extensions: [".mdx"]
+  shell:
+    extensions: [".sh", ".bash"]
+  docker:
+    extensions: ["Dockerfile", ".dockerfile"]
+  twig:
+    extensions: [".twig"]
+  gherkin:
+    extensions: [".feature"]

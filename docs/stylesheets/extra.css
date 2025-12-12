@@ -1,0 +1,143 @@
+/* Inspired Pet Nutrition Branding */
+/* Colors: Dark Green #024638, Light Green #00A26A */
+/* Fonts: Canela (Headings), Axiforma (Body), Betterlett (Accents) */
+
+:root {
+    /* Primary Dark Green */
+    --md-primary-fg-color: #024638;
+    --md-primary-fg-color--light: #00A26A;
+    --md-primary-fg-color--dark: #013228;
+
+    /* Accent Green */
+    --md-accent-fg-color: #00A26A;
+
+    /* Backgrounds */
+    --md-default-bg-color: #ffffff;
+    --md-default-fg-color: #024638;
+    /* Text is dark green */
+
+    /* Fonts */
+    --md-text-font: "Axiforma", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --md-code-font: "Roboto Mono", monospace;
+    --heading-font: "Canela", "Georgia", serif;
+    --accent-font: "Betterlett", "Arial", sans-serif;
+}
+
+/* Typography Overrides */
+body,
+input,
+button {
+    font-family: var(--md-text-font);
+    color: #024638;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.md-header__title {
+    font-family: var(--heading-font);
+    font-weight: 600;
+    color: #024638;
+}
+
+/* Header Styling */
+.md-header {
+    background-color: var(--md-primary-fg-color) !important;
+    color: #fff;
+}
+
+.md-header__button {
+    color: #fff !important;
+}
+
+/* Sidebar Styling */
+.md-sidebar {
+    background-color: #f8f9fa;
+}
+
+.md-nav__link--active {
+    color: var(--md-accent-fg-color) !important;
+    font-weight: bold;
+}
+
+.md-nav__item .md-nav__link:hover {
+    color: var(--md-accent-fg-color);
+}
+
+/* Sidebar Navigation - Always Visible Fixes */
+@media screen and (min-width: 76.25em) {
+    .md-sidebar--primary {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        transform: none !important;
+    }
+
+    .md-sidebar--secondary {
+        display: none;
+        /* Hide secondary sidebar (table of contents) to reduce clutter if desired, or keep it */
+    }
+}
+
+/* Custom UI Elements */
+.md-content__button {
+    color: var(--md-primary-fg-color) !important;
+}
+
+/* Buttons and Interactions */
+a {
+    color: var(--md-accent-fg-color);
+}
+
+a:hover {
+    color: var(--md-primary-fg-color);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar-thumb {
+    background-color: #00A26A;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-track {
+    background-color: #f1f1f1;
+}
+
+/* Collapsible Navigation Styling */
+.md-nav__item--nested>.md-nav__link {
+    font-weight: 600;
+    color: #024638;
+    /* Dark green for categories */
+}
+
+.toggle-arrow {
+    display: inline-block;
+    margin-right: 8px;
+    cursor: pointer;
+    transition: transform 0.2s;
+    color: #00A26A;
+    /* Light green arrows */
+    font-size: 0.8em;
+}
+
+.toggle-arrow.collapsed {
+    transform: rotate(-90deg);
+}
+
+.nested-list {
+    margin-left: 1.5rem;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+}
+
+.nested-list.collapsed {
+    display: none;
+}
+
+/* Hide duplicate Main header if it appears */
+h1:first-of-type {
+    margin-top: 0;
+}

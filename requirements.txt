@@ -1,0 +1,5 @@
+PyYAML
+mkdocs
+mkdocs-material
+markdown-include
+anthropic

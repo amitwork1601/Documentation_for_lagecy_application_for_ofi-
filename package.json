@@ -1,0 +1,16 @@
+{
+    "name": "documentation-explorer",
+    "version": "1.0.0",
+    "description": "Interactive documentation explorer for legacy application",
+    "scripts": {
+        "deploy": "vercel --prod",
+        "dev": "python -m mkdocs serve"
+    },
+    "keywords": [
+        "documentation",
+        "explorer",
+        "viewer"
+    ],
+    "author": "",
+    "license": "MIT"
+}

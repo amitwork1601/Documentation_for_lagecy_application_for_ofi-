@@ -1,0 +1,40 @@
+# Git ignore file for Documentation Generator
+
+# Cloned repository (don't commit this!)
+repo_src/
+
+# Generated documentation (tracked in git for backup)
+!docs/
+
+# Test files (optional - uncomment if you don't want to commit test files)
+# test_repo/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+
+# Environment variables
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+.vercel
+.env*.local

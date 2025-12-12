@@ -1,0 +1,13 @@
+{# User profile template #}
+{# Displays user information and settings #}
+
+<div class="user-profile">
+    <h1>{{ user.name }}</h1>
+    <p>Email: {{ user.email }}</p>
+    
+    {% if user.isAdmin %}
+        <div class="admin-panel">
+            <h2>Admin Controls</h2>
+        </div>
+    {% endif %}
+</div>
