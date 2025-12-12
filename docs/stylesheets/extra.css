@@ -47,16 +47,16 @@ h6,
 .md-header {
     background-color: var(--md-primary-fg-color) !important;
     color: #fff;
+    position: sticky;
+    top: 0;
+    z-index: 1000 !important;
 }
 
 .md-header__button {
     color: #fff !important;
 }
 
-/* Sidebar Styling */
-.md-sidebar {
-    background-color: #f8f9fa;
-}
+/* Sidebar Styling - background-color removed */
 
 .md-nav__link--active {
     color: var(--md-accent-fg-color) !important;
@@ -113,31 +113,500 @@ a:hover {
     /* Dark green for categories */
 }
 
-.toggle-arrow {
-    display: inline-block;
-    margin-right: 8px;
-    cursor: pointer;
-    transition: transform 0.2s;
-    color: #00A26A;
-    /* Light green arrows */
-    font-size: 0.8em;
+/* Improved Collapsible TOC Styling */
+.md-content li {
+    position: relative;
+    transition: background-color 0.2s ease;
 }
 
-.toggle-arrow.collapsed {
+.md-content li:hover {
+    background-color: rgba(0, 162, 106, 0.05);
+}
+
+.md-content li.collapsed>ul {
+    display: none;
+}
+
+.md-content li:not(.collapsed)>ul {
+    display: block;
+    animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        max-height: 0;
+    }
+
+    to {
+        opacity: 1;
+        max-height: 1000px;
+    }
+}
+
+.toc-toggle {
+    cursor: pointer;
+    margin-right: 0.5rem;
+    color: #00A26A !important;
+    font-size: 0.85em;
+    display: inline-block;
+    transition: transform 0.2s ease, color 0.2s ease;
+    user-select: none;
+    font-weight: bold;
+    line-height: 1;
+    vertical-align: middle;
+}
+
+.toc-toggle:hover {
+    color: #024638 !important;
+    transform: scale(1.1);
+}
+
+.md-content li.collapsed .toc-toggle {
     transform: rotate(-90deg);
 }
 
-.nested-list {
-    margin-left: 1.5rem;
-    overflow: hidden;
-    transition: max-height 0.3s ease-out;
+.md-content li:not(.collapsed) .toc-toggle {
+    transform: rotate(0deg);
 }
 
-.nested-list.collapsed {
-    display: none;
+/* Improve nested list styling */
+.md-content ul ul {
+    margin-left: 1.5rem;
+    margin-top: 0.25rem;
+    padding-left: 0.5rem;
+    border-left: 2px solid #e2e8f0;
+}
+
+.md-content ul ul li {
+    padding: 0.25rem 0;
+}
+
+.md-content ul ul li a {
+    color: #024638;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.md-content ul ul li a:hover {
+    color: #00A26A;
+    text-decoration: underline;
 }
 
 /* Hide duplicate Main header if it appears */
 h1:first-of-type {
     margin-top: 0;
+}
+
+/* Summary Page Filter Buttons */
+.md-content button[style*="background-color: #dc2626"],
+.md-content .clear-filters-btn {
+    padding: 0.5rem 1rem;
+    background-color: #dc2626 !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'Poppins', Arial, sans-serif;
+    transition: all 0.2s ease;
+}
+
+.md-content button[style*="background-color: #dc2626"]:hover,
+.md-content .clear-filters-btn:hover {
+    background-color: #b91c1c !important;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(220, 38, 38, 0.3);
+}
+
+.md-content button[style*="background-color: #00A26A"],
+.md-content .expand-all-btn {
+    background-color: #00A26A !important;
+    color: white !important;
+    padding: 0.5rem 1rem;
+    border: none !important;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+}
+
+.md-content button[style*="background-color: #00A26A"]:hover,
+.md-content .expand-all-btn:hover {
+    background-color: #00b877 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 162, 106, 0.3);
+}
+
+.md-content button[style*="background-color: #4b5563"],
+.md-content .collapse-all-btn {
+    background-color: #4b5563 !important;
+    color: white !important;
+    padding: 0.5rem 1rem;
+    border: none !important;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+}
+
+.md-content button[style*="background-color: #4b5563"]:hover,
+.md-content .collapse-all-btn:hover {
+    background-color: #374151 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(75, 85, 99, 0.3);
+}
+
+/* Navigation Buttons (Prev/Next) */
+.md-content a[style*="background-color: #00A26A"],
+.md-content .nav-button {
+    background-color: #00A26A !important;
+    color: white !important;
+    padding: 0.5rem 1.25rem;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.875rem;
+    font-family: 'Axiforma', 'Poppins', sans-serif;
+    transition: all 0.2s ease;
+    text-align: center;
+    min-width: 140px;
+    white-space: nowrap;
+    display: inline-block;
+    box-sizing: border-box;
+    overflow: visible;
+}
+
+.md-content a[style*="background-color: #00A26A"]:hover,
+.md-content .nav-button:hover {
+    background-color: #024638 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(2, 70, 56, 0.3);
+}
+
+.md-content a[style*="opacity: 0.45"],
+.md-content .nav-button:disabled {
+    opacity: 0.45;
+    pointer-events: none;
+    filter: grayscale(0.2);
+}
+
+/* ============================================
+   DOCUMENTATION SIDEBAR NAVIGATION
+   ============================================ */
+
+/* Layout wrapper for sidebar + content */
+.docs-layout-wrapper {
+    display: flex;
+    gap: 0;
+    max-width: 100%;
+    position: relative;
+    width: 100%;
+    align-items: flex-start;
+}
+
+/* Sidebar container */
+.docs-sidebar {
+    width: 300px;
+    min-width: 300px;
+    background: linear-gradient(to bottom, #ffffff 0%, #f8fafc 100%);
+    border-right: 1px solid #e2e8f0;
+    max-height: calc(100vh - 60px);
+    height: calc(100vh - 60px);
+    position: sticky;
+    top: 60px;
+    overflow: hidden;
+    z-index: 1;
+    transition: transform 0.3s ease;
+    flex-shrink: 0;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.04);
+    margin-top: 0;
+    align-self: flex-start;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Sidebar search */
+.sidebar-search-container {
+    padding: 1rem;
+    background: white;
+    border-bottom: 1px solid #e2e8f0;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    margin-top: 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    flex-shrink: 0;
+}
+
+.sidebar-search-input {
+    width: 100%;
+    padding: 0.625rem 0.75rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-family: var(--md-text-font);
+    color: var(--md-default-fg-color);
+    background: white;
+    transition: all 0.2s ease;
+}
+
+.sidebar-search-input:focus {
+    outline: none;
+    border-color: var(--md-accent-fg-color);
+    box-shadow: 0 0 0 3px rgba(0, 162, 106, 0.1);
+}
+
+.sidebar-search-input::placeholder {
+    color: #94a3b8;
+}
+
+/* Navigation list */
+.sidebar-nav-list {
+    padding: 0.5rem 0;
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* Category section */
+.sidebar-category-section {
+    margin-bottom: 0.25rem;
+}
+
+.sidebar-category-header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.875rem 1rem;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-family: var(--md-text-font);
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--md-primary-fg-color);
+    text-align: left;
+    transition: all 0.2s ease;
+    position: relative;
+    border-bottom: 1px solid rgba(226, 232, 240, 0.5);
+}
+
+.sidebar-category-header:hover {
+    background: rgba(0, 162, 106, 0.08);
+    color: var(--md-accent-fg-color);
+}
+
+.sidebar-category-header:active {
+    background: rgba(0, 162, 106, 0.12);
+}
+
+.sidebar-category-icon {
+    font-size: 0.75rem;
+    transition: transform 0.2s ease;
+    color: var(--md-accent-fg-color);
+    flex-shrink: 0;
+}
+
+.sidebar-category-name {
+    flex: 1;
+    text-align: left;
+}
+
+.sidebar-category-count {
+    background: rgba(2, 70, 56, 0.1);
+    color: var(--md-primary-fg-color);
+    padding: 0.125rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    min-width: 24px;
+    text-align: center;
+}
+
+.sidebar-category-header:hover .sidebar-category-count {
+    background: rgba(0, 162, 106, 0.2);
+    color: var(--md-accent-fg-color);
+}
+
+/* Category content */
+.sidebar-category-content {
+    padding-left: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+/* Navigation links */
+.sidebar-nav-link {
+    display: block;
+    padding: 0.75rem 1rem 0.75rem 2.25rem;
+    color: #475569;
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-family: var(--md-text-font);
+    transition: all 0.2s ease;
+    border-left: 3px solid transparent;
+    position: relative;
+    line-height: 1.5;
+    border-radius: 0 6px 6px 0;
+    margin-right: 0.5rem;
+}
+
+.sidebar-nav-link:hover {
+    background: rgba(0, 162, 106, 0.08);
+    color: var(--md-accent-fg-color);
+    border-left-color: var(--md-accent-fg-color);
+    padding-left: 2rem;
+    transform: translateX(2px);
+}
+
+.sidebar-nav-link.active {
+    background: linear-gradient(to right, rgba(0, 162, 106, 0.15), rgba(0, 162, 106, 0.05));
+    color: var(--md-primary-fg-color);
+    border-left-color: var(--md-accent-fg-color);
+    font-weight: 600;
+    padding-left: 2rem;
+    box-shadow: 0 2px 4px rgba(0, 162, 106, 0.1);
+}
+
+.sidebar-nav-link.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--md-accent-fg-color);
+    border-radius: 0 2px 2px 0;
+}
+
+/* Toggle button for mobile */
+.sidebar-toggle {
+    display: none;
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    z-index: 1000;
+    background: var(--md-primary-fg-color);
+    color: white;
+    border: none;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1.25rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    transition: all 0.2s ease;
+}
+
+.sidebar-toggle:hover {
+    background: var(--md-accent-fg-color);
+    transform: scale(1.05);
+}
+
+/* Adjust main content when sidebar is present */
+.docs-layout-wrapper .md-content__inner,
+.docs-layout-wrapper .md-content {
+    flex: 1;
+    min-width: 0;
+    /* Allow flexbox to shrink */
+    max-width: calc(100% - 300px);
+    padding-left: 2.5rem;
+    padding-right: 2.5rem;
+}
+
+/* Ensure content area doesn't overflow */
+.md-content__inner,
+.md-content {
+    box-sizing: border-box;
+}
+
+/* Mobile responsiveness */
+@media screen and (max-width: 76.25em) {
+    .docs-sidebar {
+        position: fixed;
+        left: 0;
+        top: 60px;
+        transform: translateX(-100%);
+        box-shadow: 4px 0 16px rgba(0, 0, 0, 0.15);
+        z-index: 999;
+        width: 280px;
+        min-width: 280px;
+        height: calc(100vh - 60px);
+    }
+
+    .docs-sidebar.sidebar-open {
+        transform: translateX(0);
+    }
+
+    .sidebar-toggle {
+        display: block;
+    }
+
+    .docs-layout-wrapper .md-content__inner,
+    .docs-layout-wrapper .md-content {
+        max-width: 100%;
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    /* Overlay when sidebar is open on mobile */
+    .docs-sidebar.sidebar-open::before {
+        content: '';
+        position: fixed;
+        top: 60px;
+        left: 280px;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.4);
+        z-index: 998;
+        backdrop-filter: blur(2px);
+    }
+}
+
+/* Scrollbar styling for sidebar */
+.docs-sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.docs-sidebar::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+
+.docs-sidebar::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+
+.docs-sidebar::-webkit-scrollbar-thumb:hover {
+    background: var(--md-accent-fg-color);
+}
+
+/* Smooth scrolling - already defined above, removed duplicate */
+
+/* Ensure sidebar doesn't interfere with MkDocs header */
+.md-container {
+    position: relative;
+}
+
+/* Ensure header stays on top with high z-index */
+.md-header {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 1000 !important;
+}
+
+/* Hide default MkDocs sidebar on documentation pages when our sidebar is present */
+.docs-layout-wrapper~.md-sidebar--primary,
+.md-container:has(.docs-layout-wrapper) .md-sidebar--primary {
+    display: none !important;
+}
+
+/* Ensure proper layout structure - don't override MkDocs defaults too aggressively */
+.md-content {
+    position: relative;
+}
+
+/* When sidebar is present, adjust content area */
+.docs-layout-wrapper .md-content__inner,
+.docs-layout-wrapper .md-content {
+    width: 100%;
 }

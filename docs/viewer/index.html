@@ -1,115 +1,157 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Documentation Explorer</title>
-    <link rel="stylesheet" href="./styles.css" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
-  </head>
-  <body>
-    <header class="hero">
-      <div class="hero__content">
-        <p class="hero__eyebrow">MkDocs Explorer</p>
-        <h1>Search, filter, and preview generated documentation.</h1>
-        <p class="hero__lede">
-          Use the global search and category filters to jump to the exact
-          controller, service, or plugin without leaving MkDocs.
-        </p>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Documentation Explorer</title>
+  <link rel="stylesheet" href="./styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+</head>
+
+<body>
+  <header class="hero">
+    <div class="hero__content">
+      <p class="hero__eyebrow">Documentation Hub</p>
+      <h1>Explorer & Builder</h1>
+      <p class="hero__lede">
+        Search, filter, and organize your documentation. Drag items to the selection zone to build your custom package.
+      </p>
+    </div>
+  </header>
+
+  <main class="layout">
+    <!-- Column 1: Filters -->
+    <section class="panel panel--filters">
+      <div class="panel__header">
+        <h2>Filters</h2>
+        <button id="clearFilters" type="button" class="btn-reset">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 6h18M7 12h10M11 18h2" />
+          </svg>
+          Reset
+        </button>
       </div>
-    </header>
-
-    <main class="layout">
-      <section class="panel panel--filters">
+      <div class="panel__content">
         <div class="field-group">
-          <label for="searchInput">Search documentation</label>
+          <label for="searchInput">Search</label>
           <div class="searchbox">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
               <path
-                d="M15.5 14h-.79l-.28-.27a6 6 0 10-.71.71l.27.28v.79L20 21.49 21.49 20zm-6 0A4.5 4.5 0 1114 9.5 4.5 4.5 0 019.5 14z"
-              />
+                d="M15.5 14h-.79l-.28-.27a6 6 0 10-.71.71l.27.28v.79L20 21.49 21.49 20zm-6 0A4.5 4.5 0 1114 9.5 4.5 4.5 0 019.5 14z" />
             </svg>
-            <input
-              type="search"
-              id="searchInput"
-              placeholder="Search by title, summary, file name..."
-              autocomplete="off"
-            />
+            <input type="search" id="searchInput" placeholder="Search by title, summary, file name..."
+              autocomplete="off" />
+            <button type="button" id="clearSearch" class="search-clear" style="display: none;"
+              aria-label="Clear search">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
           </div>
         </div>
 
-        <div class="field-grid">
-          <div class="field-group">
-            <label for="categoryFilter">Category</label>
-            <select id="categoryFilter">
-              <option value="all">All categories</option>
-            </select>
-          </div>
-          <div class="field-group">
-            <label for="repoFilter">Repository</label>
-            <select id="repoFilter">
-              <option value="all">All repositories</option>
-            </select>
-          </div>
+        <!-- Active Filters Display -->
+        <div id="activeFilters" class="active-filters" style="display: none;">
+          <div class="active-filters-label">Active Filters:</div>
+          <div class="filter-chips"></div>
         </div>
 
         <div class="field-group">
-          <label for="sortOrder">Sort</label>
-          <select id="sortOrder">
-            <option value="title">Alphabetical (A → Z)</option>
-            <option value="repo">Repository</option>
-            <option value="category">Category</option>
+          <label for="categoryFilter">Category</label>
+          <select id="categoryFilter">
+            <option value="all">All Categories</option>
           </select>
         </div>
-      </section>
 
-      <section class="panel panel--results">
-        <div class="panel__header">
-          <div>
-            <h2>Documentation results</h2>
-            <p id="resultsCount" class="muted">Loading…</p>
-          </div>
-          <button id="clearFilters" type="button" class="link-button">
-            Clear filters
-          </button>
+        <div class="field-group">
+          <label for="repoFilter">Repository</label>
+          <select id="repoFilter">
+            <option value="all">All Repositories</option>
+          </select>
         </div>
-        <div id="resultsList" class="results-list" role="list"></div>
-      </section>
 
-      <section class="panel panel--preview">
-        <div class="panel__header">
-          <div>
-            <h2 id="previewTitle">Select a document</h2>
-            <p id="previewMeta" class="muted">
-              Choose an entry from the left to see its contents
+        <div class="field-group">
+          <label for="sortOrder">Sort By</label>
+          <select id="sortOrder">
+            <option value="title">Name (A-Z)</option>
+            <option value="category">Category</option>
+            <option value="repo">Repository</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <!-- Column 2: Results -->
+    <section class="panel panel--results">
+      <div class="panel__header">
+        <h2>Documents</h2>
+        <div class="panel__header-actions">
+          <p id="resultsCount" class="muted">Loading...</p>
+          <div class="expand-controls">
+            <button id="expandAll" type="button" class="btn-expand" title="Expand all categories">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9l6 6 6-6" />
+              </svg>
+              Expand All
+            </button>
+            <button id="collapseAll" type="button" class="btn-collapse" title="Collapse all categories">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 15l6-6 6 6" />
+              </svg>
+              Collapse All
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="panel__content">
+        <div id="resultsList" class="results-list" role="list"></div>
+      </div>
+    </section>
+
+    <!-- Column 3: Selection & Preview -->
+    <section class="panel panel--preview">
+      <div class="tabs">
+        <button class="tab active" data-tab="selection">Selection</button>
+        <button class="tab" data-tab="preview">Preview</button>
+      </div>
+
+      <div class="panel__content">
+        <!-- Selection Tab -->
+        <div id="tab-selection" class="tab-content">
+          <div id="selectionZone" class="selection-zone">
+            <p class="muted" style="text-align: center; margin-top: 2rem;">
+              Drag items here to select them
             </p>
           </div>
+          <div style="margin-top: 1rem; text-align: right;">
+            <button id="exportSelection" class="link-button" style="font-size: 1rem;">
+              Export Selection
+            </button>
+          </div>
         </div>
-        <article id="docPreview" class="preview markdown-body">
-          <p class="muted">
-            The full Markdown file renders here once you pick a document.
-          </p>
-        </article>
-      </section>
-    </main>
 
-    <noscript>
-      <p class="noscript">
-        This viewer requires JavaScript to load <code>docs_index.json</code>.
-      </p>
-    </noscript>
+        <!-- Preview Tab -->
+        <div id="tab-preview" class="tab-content" style="display: none;">
+          <article id="docPreview" class="markdown-body">
+            <p class="muted">Select a document to view details.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
 
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script type="module" src="./app.js"></script>
-  </body>
+  <noscript>
+    <p class="noscript">
+      This viewer requires JavaScript.
+    </p>
+  </noscript>
+
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script type="module" src="./app.js"></script>
+</body>
+
 </html>
-

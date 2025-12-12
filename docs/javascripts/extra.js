@@ -1,11 +1,54 @@
 // Collapsible Navigation for SUMMARY page
 document.addEventListener('DOMContentLoaded', function () {
+    // Helper function to check if an element is within a target section
+    const isInTargetSection = (element, targetHeading) => {
+        if (!targetHeading) return false;
+        let current = element;
+        while (current && current !== document.body) {
+            // Check if we've passed the target heading
+            if (current === targetHeading) return true;
+            // Check if we're after the target heading but before the next same-level heading
+            if (current.previousElementSibling === targetHeading) return true;
+            // Check parent's previous sibling
+            if (current.parentElement && current.parentElement.previousElementSibling === targetHeading) return true;
+            // Stop if we hit another h2 (next section)
+            if (current.tagName === 'H2' && current !== targetHeading) return false;
+            current = current.parentElement;
+        }
+        return false;
+    };
+
     // Make nested lists collapsible
     const makeCollapsible = () => {
+        // Find target heading if hash exists
+        const hasHash = window.location.hash && window.location.hash.length > 1;
+        const hashValue = hasHash ? window.location.hash.substring(1).toLowerCase() : '';
+        let targetHeading = null;
+        if (hasHash) {
+            // Try multiple selectors to find the target heading
+            targetHeading = document.querySelector(`h2[id="${hashValue}"], h2[id*="${hashValue}"], h1[id="${hashValue}"], h1[id*="${hashValue}"]`) ||
+                document.querySelector(`h2:contains("${hashValue}"), h1:contains("${hashValue}")`);
+            // Fallback: find by text content
+            if (!targetHeading) {
+                const allHeadings = document.querySelectorAll('.md-content h1, .md-content h2');
+                allHeadings.forEach(h => {
+                    if (h.textContent.toLowerCase().includes(hashValue) ||
+                        h.id.toLowerCase().includes(hashValue)) {
+                        targetHeading = h;
+                    }
+                });
+            }
+        }
+
         // Find all list items that contain nested lists
         const listItems = document.querySelectorAll('.md-content li');
 
         listItems.forEach(item => {
+            // Skip if toggle already exists
+            if (item.querySelector('.toc-toggle')) {
+                return;
+            }
+
             const nestedList = item.querySelector('ul');
 
             if (nestedList) {
@@ -27,10 +70,37 @@ document.addEventListener('DOMContentLoaded', function () {
                 const firstChild = item.firstChild;
                 item.insertBefore(toggle, firstChild);
 
-                // Initially collapse nested lists
-                nestedList.style.display = 'none';
-                toggle.style.transform = 'rotate(-90deg)';
-                item.classList.add('collapsed');
+                // Check if this item is in the target section
+                const isTargetSection = hasHash && targetHeading && isInTargetSection(item, targetHeading);
+
+                // Check if the nested list is already visible
+                const inlineDisplay = nestedList.style.display;
+                const computedDisplay = window.getComputedStyle(nestedList).display;
+                const isCurrentlyVisible = inlineDisplay !== 'none' && computedDisplay !== 'none';
+
+                // Behavior: 
+                // - If navigating to a specific section (hash), expand only that section
+                // - On first load (no hash), collapse everything by default
+                if (hasHash) {
+                    // We're navigating to a specific section
+                    if (isTargetSection) {
+                        // Expand the target section
+                        nestedList.style.display = 'block';
+                        toggle.style.transform = 'rotate(0deg)';
+                        item.classList.remove('collapsed');
+                    } else {
+                        // Collapse all other sections
+                        nestedList.style.display = 'none';
+                        toggle.style.transform = 'rotate(-90deg)';
+                        item.classList.add('collapsed');
+                    }
+                } else {
+                    // First load without hash - collapse everything by default
+                    // User can use "Expand All" button to expand all sections
+                    nestedList.style.display = 'none';
+                    toggle.style.transform = 'rotate(-90deg)';
+                    item.classList.add('collapsed');
+                }
 
                 // Toggle on click
                 toggle.addEventListener('click', (e) => {
@@ -53,15 +123,103 @@ document.addEventListener('DOMContentLoaded', function () {
     // Run on page load
     makeCollapsible();
 
+    // Re-run after a short delay to catch any late-rendered content
+    setTimeout(() => {
+        makeCollapsible();
+    }, 100);
+
+    // Also listen for hash changes (when navigating to sections)
+    window.addEventListener('hashchange', () => {
+        setTimeout(() => {
+            makeCollapsible();
+        }, 200);
+    });
+
+    // Use MutationObserver to detect when new content is added
+    let observerTimeout;
+    const observer = new MutationObserver((mutations) => {
+        let shouldUpdate = false;
+        mutations.forEach((mutation) => {
+            if (mutation.addedNodes.length > 0) {
+                // Check if any added nodes contain list items
+                mutation.addedNodes.forEach((node) => {
+                    if (node.nodeType === 1) { // Element node
+                        if (node.tagName === 'LI' || node.querySelector('li')) {
+                            shouldUpdate = true;
+                        }
+                    }
+                });
+            }
+        });
+        if (shouldUpdate) {
+            // Debounce to avoid too many calls
+            clearTimeout(observerTimeout);
+            observerTimeout = setTimeout(() => {
+                makeCollapsible();
+            }, 150);
+        }
+    });
+
+    const content = document.querySelector('.md-content');
+    if (content) {
+        observer.observe(content, {
+            childList: true,
+            subtree: true
+        });
+    }
+
+    // Listen for MkDocs Material instant navigation events
+    // MkDocs Material may dispatch custom events when content is updated
+    const navigationEvents = ['md-navigation', 'navigation', 'location'];
+    navigationEvents.forEach(eventName => {
+        document.addEventListener(eventName, () => {
+            setTimeout(() => {
+                makeCollapsible();
+            }, 200);
+        });
+    });
+
+    // Also listen for popstate (back/forward navigation)
+    window.addEventListener('popstate', () => {
+        setTimeout(() => {
+            makeCollapsible();
+        }, 200);
+    });
+
+    // Fallback: periodically check for new elements (only on SUMMARY page)
+    // This ensures we catch any elements that might be added asynchronously
+    if (window.location.pathname.includes('SUMMARY') ||
+        window.location.pathname.includes('summary') ||
+        document.title.includes('Overview')) {
+        setInterval(() => {
+            // Check for list items with nested lists that don't have toggles
+            const allListItems = document.querySelectorAll('.md-content li');
+            let foundItemsWithoutToggle = false;
+            allListItems.forEach(item => {
+                const nestedList = item.querySelector('ul');
+                const hasToggle = item.querySelector('.toc-toggle');
+                if (nestedList && !hasToggle) {
+                    foundItemsWithoutToggle = true;
+                }
+            });
+            if (foundItemsWithoutToggle) {
+                makeCollapsible();
+            }
+        }, 1000);
+    }
+
     // Build document list from SUMMARY page for navigation
     const buildDocumentList = async () => {
         try {
-            const response = await fetch('../SUMMARY/');
+            const summaryUrl = new URL('../SUMMARY/', window.location.href);
+            const response = await fetch(summaryUrl);
             const html = await response.text();
             const parser = new DOMParser();
             const doc = parser.parseFromString(html, 'text/html');
 
             const links = [];
+            const seenHrefs = new Set(); // Track seen hrefs to avoid duplicates
+
             doc.querySelectorAll('.md-content a[href]').forEach(link => {
                 const href = link.getAttribute('href');
                 // Skip anchors, external links, and navigation links
@@ -71,7 +229,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     !href.includes('SUMMARY') &&
                     !href.includes('explorer') &&
                     href !== '../' &&
-                    href !== '/') {
+                    href !== '/' &&
+                    !seenHrefs.has(href)) { // Avoid duplicates
+                    seenHrefs.add(href);
                     links.push({
                         href: href,
                         title: link.textContent.trim()
@@ -178,16 +338,8 @@ document.addEventListener('DOMContentLoaded', function () {
         // Clear filters button
         const clearButton = document.createElement('button');
         clearButton.textContent = 'Clear Filters';
-        clearButton.style.cssText = `
-      padding: 0.5rem 1rem;
-      background-color: #3C3228;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-family: 'Poppins', Arial, sans-serif;
-      margin-left: auto;
-    `;
+        clearButton.className = 'clear-filters-btn';
+        clearButton.style.marginLeft = 'auto';
 
         clearButton.onclick = () => {
             searchBox.value = '';
@@ -291,41 +443,21 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const expandAll = document.createElement('button');
         expandAll.textContent = 'Expand All';
-        expandAll.className = 'md-button md-button--primary';
-        expandAll.style.cssText = `
-      background-color: #6B4C9A;
-      color: white;
-      padding: 0.5rem 1rem;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 0.9rem;
-    `;
+        expandAll.className = 'md-button md-button--primary expand-all-btn';
 
         const collapseAll = document.createElement('button');
         collapseAll.textContent = 'Collapse All';
-        collapseAll.className = 'md-button';
-        collapseAll.style.cssText = `
-      background-color: #3C3228;
-      color: white;
-      padding: 0.5rem 1rem;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 0.9rem;
-    `;
+        collapseAll.className = 'md-button collapse-all-btn';
 
         expandAll.addEventListener('click', () => {
+            // Expand all nested lists
             document.querySelectorAll('.md-content ul ul').forEach(ul => {
-                if (ul.style.display !== 'none') {
-                    ul.style.display = 'block';
-                }
+                ul.style.display = 'block';
             });
+            // Update all toggle icons and remove collapsed class
             document.querySelectorAll('.toc-toggle').forEach(toggle => {
-                if (toggle.parentElement.style.display !== 'none') {
-                    toggle.style.transform = 'rotate(0deg)';
-                    toggle.parentElement.classList.remove('collapsed');
-                }
+                toggle.style.transform = 'rotate(0deg)';
+                toggle.parentElement.classList.remove('collapsed');
             });
         });
 
@@ -364,206 +496,569 @@ document.addEventListener('DOMContentLoaded', function () {
         console.log('Not on SUMMARY page');
     }
 
-    // Add Previous/Next navigation buttons on document pages
+    // Normalize path for reliable matching
+    const normalizePath = (path) => {
+        if (!path) return '';
+        const url = new URL(path, window.location.href);
+        return url.pathname
+            .replace(/\/index\.html?$/i, '')
+            .replace(/\/$/, '')
+            .toLowerCase();
+    };
+
+    // Add Previous/Start/Next navigation buttons on document pages
     const addPrevNextButtons = async () => {
-        // Don't add on home, SUMMARY, or explorer pages
-        if (window.location.pathname.endsWith('/') ||
-            window.location.pathname.includes('SUMMARY') ||
-            window.location.pathname.includes('explorer') ||
-            window.location.pathname.includes('index.html')) {
-            return;
-        }
+        const isSummary = window.location.pathname.includes('SUMMARY');
+        const isExplorer = window.location.pathname.includes('explorer');
+        // Check if we're on the Home/index page
+        const pathname = window.location.pathname;
+        const isIndex = pathname === '/' ||
+            pathname === '/index.html' ||
+            pathname.endsWith('/index.html') ||
+            pathname.endsWith('/index') ||
+            pathname.match(/\/index\.html?$/i) ||
+            (!pathname.includes('/') && pathname.length <= 1);
+        if (isSummary || isExplorer || isIndex) return;
 
         const content = document.querySelector('.md-content__inner') || document.querySelector('.md-content') || document.body;
 
-        // Get all document links from SUMMARY page
         const docList = await buildDocumentList();
         if (docList.length === 0) return;
 
-        // Find current document in the list
-        const currentPath = window.location.pathname.split('/').pop();
-        const currentIndex = docList.findIndex(doc => doc.href.includes(currentPath));
+        const summaryUrl = new URL('../SUMMARY/', window.location.href);
+        const normalizedDocs = docList.map((doc) => {
+            const resolved = new URL(doc.href, summaryUrl);
+            const normalized = normalizePath(resolved.pathname);
+            return {
+                ...doc,
+                normalized: normalized,
+                resolvedHref: resolved.href
+            };
+        });
+
+        // Remove duplicates based on normalized path
+        const uniqueDocs = [];
+        const seenNormalized = new Set();
+        normalizedDocs.forEach(doc => {
+            if (!seenNormalized.has(doc.normalized)) {
+                seenNormalized.add(doc.normalized);
+                uniqueDocs.push(doc);
+            }
+        });
+
+        const currentPath = normalizePath(window.location.pathname);
+
+        // More precise matching: try exact match first, then endsWith
+        let currentIndex = uniqueDocs.findIndex((doc) => {
+            const docPath = doc.normalized;
+            // Exact match
+            if (currentPath === docPath) return true;
+            // Ends with the normalized path (handles trailing slashes)
+            const pathWithoutSlash = currentPath.replace(/\/$/, '');
+            const docPathWithoutSlash = docPath.replace(/\/$/, '');
+            return pathWithoutSlash === docPathWithoutSlash ||
+                pathWithoutSlash.endsWith('/' + docPathWithoutSlash);
+        });
+
+        // Fallback: try less strict matching only if exact match failed
+        if (currentIndex === -1) {
+            currentIndex = uniqueDocs.findIndex((doc) => {
+                const docPath = doc.normalized.replace(/\/$/, '');
+                const pathWithoutSlash = currentPath.replace(/\/$/, '');
+                // Check if current path ends with doc path or vice versa
+                return pathWithoutSlash.endsWith(docPath) || docPath.endsWith(pathWithoutSlash);
+            });
+        }
 
         if (currentIndex === -1) return;
 
-        const prevDoc = currentIndex > 0 ? docList[currentIndex - 1] : null;
-        const nextDoc = currentIndex < docList.length - 1 ? docList[currentIndex + 1] : null;
+        const prevDoc = currentIndex > 0 ? uniqueDocs[currentIndex - 1] : null;
+        const nextDoc = currentIndex < uniqueDocs.length - 1 ? uniqueDocs[currentIndex + 1] : null;
 
-        // Create navigation container
-        const createNavButtons = () => {
-            const navContainer = document.createElement('div');
-            navContainer.style.cssText = `
+        const buildButton = (label, target, disabled = false) => {
+            const btn = document.createElement('a');
+            btn.textContent = label;
+            btn.href = disabled || !target ? '#' : target;
+            btn.className = 'nav-button';
+            if (disabled) {
+                btn.style.opacity = '0.45';
+                btn.style.pointerEvents = 'none';
+                btn.style.filter = 'grayscale(0.2)';
+            }
+            return btn;
+        };
+
+        const createNavRow = () => {
+            const container = document.createElement('div');
+            container.style.cssText = `
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin: 2rem 0;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        margin: 1.75rem 0;
         padding: 1rem 0;
         border-top: 2px solid #e2e8f0;
-        gap: 1rem;
       `;
 
-            // Previous button
-            if (prevDoc) {
-                const prevBtn = document.createElement('a');
-                prevBtn.href = '../' + prevDoc.href;
-                prevBtn.innerHTML = `
-          <div style="display: flex; align-items: center; gap: 0.5rem;">
-            <span style="font-size: 1.2rem;">❮</span>
-            <div>
-              <div style="font-size: 0.75rem; opacity: 0.8;">Previous</div>
-              <div style="font-weight: 500;">${prevDoc.title}</div>
-            </div>
-          </div>
-        `;
-                prevBtn.style.cssText = `
-          background-color: #00A26A;
-          color: white;
-          padding: 0.75rem 1.25rem;
-          border-radius: 4px;
-          text-decoration: none;
-          font-family: 'Axiforma', 'Poppins', Arial, sans-serif;
-          transition: all 0.3s ease;
-          flex: 1;
-          max-width: 45%;
-        `;
-                prevBtn.onmouseover = () => {
-                    prevBtn.style.backgroundColor = '#024638';
-                    prevBtn.style.transform = 'translateX(-4px)';
-                };
-                prevBtn.onmouseout = () => {
-                    prevBtn.style.backgroundColor = '#00A26A';
-                    prevBtn.style.transform = 'translateX(0)';
-                };
-                navContainer.appendChild(prevBtn);
-            } else {
-                navContainer.appendChild(document.createElement('div'));
-            }
+            // Create wrapper for previous button (left)
+            const prevWrapper = document.createElement('div');
+            prevWrapper.style.flex = '1';
+            prevWrapper.style.display = 'flex';
+            prevWrapper.style.justifyContent = 'flex-start';
+            prevWrapper.appendChild(buildButton('‹ previous', prevDoc?.resolvedHref || '', !prevDoc));
 
-            // Back to Index button (center)
-            const backBtn = document.createElement('a');
-            backBtn.href = '../SUMMARY/';
-            backBtn.innerHTML = '📋 Index';
-            backBtn.style.cssText = `
-        background-color: #024638;
-        color: white;
-        padding: 0.75rem 1.25rem;
-        border-radius: 4px;
-        text-decoration: none;
-        font-weight: 500;
-        font-family: 'Axiforma', 'Poppins', Arial, sans-serif;
-        transition: all 0.3s ease;
-      `;
-            backBtn.onmouseover = () => {
-                backBtn.style.backgroundColor = '#00A26A';
-                backBtn.style.transform = 'translateY(-2px)';
-            };
-            backBtn.onmouseout = () => {
-                backBtn.style.backgroundColor = '#024638';
-                backBtn.style.transform = 'translateY(0)';
-            };
-            navContainer.appendChild(backBtn);
+            // Create wrapper for next button (right)
+            const nextWrapper = document.createElement('div');
+            nextWrapper.style.flex = '1';
+            nextWrapper.style.display = 'flex';
+            nextWrapper.style.justifyContent = 'flex-end';
+            nextWrapper.appendChild(buildButton('next ›', nextDoc?.resolvedHref || '', !nextDoc));
 
-            // Next button
-            if (nextDoc) {
-                const nextBtn = document.createElement('a');
-                nextBtn.href = '../' + nextDoc.href;
-                nextBtn.innerHTML = `
-          <div style="display: flex; align-items: center; gap: 0.5rem; text-align: right;">
-            <div>
-              <div style="font-size: 0.75rem; opacity: 0.8;">Next</div>
-              <div style="font-weight: 500;">${nextDoc.title}</div>
-            </div>
-            <span style="font-size: 1.2rem;">❯</span>
-          </div>
-        `;
-                nextBtn.style.cssText = `
-          background-color: #00A26A;
-          color: white;
-          padding: 0.75rem 1.25rem;
-          border-radius: 4px;
-          text-decoration: none;
-          font-family: 'Axiforma', 'Poppins', Arial, sans-serif;
-          transition: all 0.3s ease;
-          flex: 1;
-          max-width: 45%;
-        `;
-                nextBtn.onmouseover = () => {
-                    nextBtn.style.backgroundColor = '#024638';
-                    nextBtn.style.transform = 'translateX(4px)';
-                };
-                nextBtn.onmouseout = () => {
-                    nextBtn.style.backgroundColor = '#00A26A';
-                    nextBtn.style.transform = 'translateX(0)';
-                };
-                navContainer.appendChild(nextBtn);
-            } else {
-                navContainer.appendChild(document.createElement('div'));
-            }
+            container.appendChild(prevWrapper);
+            container.appendChild(nextWrapper);
 
-            return navContainer;
+            return container;
         };
 
-        // Add navigation at top
-        const topNav = createNavButtons();
+        const topNav = createNavRow();
         const firstElement = content.firstElementChild;
         if (firstElement) {
             content.insertBefore(topNav, firstElement);
         }
-
-        // Add navigation at bottom
-        const bottomNav = createNavButtons();
-        bottomNav.style.borderTop = '2px solid #e2e8f0';
-        bottomNav.style.borderBottom = 'none';
-        content.appendChild(bottomNav);
-
     };
 
-    // Initialize - remove old content check for safety
+    // Initialize
     addPrevNextButtons();
 
-    // Floating Back Button for all document pages (except SUMMARY)
-    const addBackButton = () => {
-        if (window.location.pathname.endsWith('SUMMARY/') || window.location.pathname.endsWith('SUMMARY/index.html')) {
-            return;
+    // Build and inject navigation sidebar
+    buildNavigationSidebar();
+});
+
+// Build navigation sidebar from docs_index.json
+async function buildNavigationSidebar() {
+    // Only show sidebar on individual documentation pages (not on SUMMARY, index, or explorer)
+    const isSummary = window.location.pathname.includes('SUMMARY');
+    const isExplorer = window.location.pathname.includes('explorer');
+    const isIndex = window.location.pathname === '/' || window.location.pathname.endsWith('/index.html');
+
+    if (isSummary || isExplorer || isIndex) return;
+
+    try {
+        // Load docs_index.json
+        const indexUrl = new URL('../docs_index.json', window.location.href);
+        const response = await fetch(indexUrl);
+        if (!response.ok) return;
+
+        const data = await response.json();
+        const files = data.files || [];
+
+        if (files.length === 0) return;
+
+        // Create order map to maintain original order from docs_index.json
+        const fileOrderMap = new Map();
+        files.forEach((file, index) => {
+            fileOrderMap.set(file.path, index);
+        });
+
+        // Group files by category while maintaining original order
+        const groupedByCategory = {};
+        files.forEach(file => {
+            const category = file.category || 'Other';
+            if (!groupedByCategory[category]) {
+                groupedByCategory[category] = [];
+            }
+            groupedByCategory[category].push(file);
+        });
+
+        // Sort categories
+        const categoryOrder = ['Controllers', 'Services', 'Entities', 'Repositories', 'Commands', 'Events', 'Plugins', 'Other'];
+        const sortedCategories = categoryOrder.filter(cat => groupedByCategory[cat]).concat(
+            Object.keys(groupedByCategory).filter(cat => !categoryOrder.includes(cat)).sort()
+        );
+
+        // Get current page path - normalize it for comparison
+        const currentPath = window.location.pathname.replace(/\/index\.html?$/, '').replace(/\/$/, '');
+        const currentPathParts = currentPath.split('/').filter(p => p);
+        const currentFileName = currentPathParts[currentPathParts.length - 1] || '';
+
+        // Load saved sidebar state from localStorage
+        const savedStateKey = 'docs-sidebar-expanded-categories';
+        const scrollPositionKey = 'docs-sidebar-scroll-position';
+        let savedExpandedCategories = [];
+        let savedScrollPosition = 0;
+        try {
+            const saved = localStorage.getItem(savedStateKey);
+            if (saved) {
+                savedExpandedCategories = JSON.parse(saved);
+            }
+            const savedScroll = localStorage.getItem(scrollPositionKey);
+            if (savedScroll) {
+                savedScrollPosition = parseInt(savedScroll, 10) || 0;
+            }
+        } catch (e) {
+            console.warn('Could not load sidebar state from localStorage', e);
         }
 
-        // Create back button
-        const backButton = document.createElement('div');
+        // Create sidebar container
+        const sidebar = document.createElement('div');
+        sidebar.id = 'docs-sidebar';
+        sidebar.className = 'docs-sidebar';
+
+        // Create search box
+        const searchContainer = document.createElement('div');
+        searchContainer.className = 'sidebar-search-container';
+        const searchInput = document.createElement('input');
+        searchInput.type = 'text';
+        searchInput.placeholder = 'Search documentation...';
+        searchInput.className = 'sidebar-search-input';
+        searchInput.addEventListener('input', (e) => filterSidebar(e.target.value));
+        searchContainer.appendChild(searchInput);
+        sidebar.appendChild(searchContainer);
+
+        // Back to index button
+        const backButton = document.createElement('a');
+        backButton.textContent = '← back to index';
+        backButton.href = new URL('../SUMMARY/', window.location.href).href;
+        backButton.className = 'sidebar-back-button';
         backButton.style.cssText = `
-      position: fixed;
-      top: 100px;
-      right: 20px;
-      z-index: 1000;
-      background-color: #00A26A;
-      color: white;
-      padding: 10px 15px;
-      border-radius: 5px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-family: 'Axiforma', 'Poppins', sans-serif;
-      transition: all 0.3s ease;
+      display: block;
+      margin: 0.35rem 0 0.85rem 0;
+      padding: 0.55rem 0.75rem;
+      text-decoration: none;
+      color: rgba(0, 162, 106);
+      background: rgb(248, 252, 250);
+      border: 1px solid rgb(226, 240, 233);
+      border-radius: 6px;
+      font-weight: 600;
+      text-align: center;
+      transition: all 0.16s ease-in-out;
     `;
-        backButton.innerHTML = '<span>←</span> Back to Index';
-
-        backButton.onclick = () => {
-            window.location.href = '../SUMMARY/';
-        };
-
-        backButton.onmouseover = () => {
-            backButton.style.backgroundColor = '#024638';
-            backButton.style.transform = 'translateY(-2px)';
-        };
-
-        backButton.onmouseout = () => {
-            backButton.style.backgroundColor = '#00A26A';
+        backButton.addEventListener('mouseenter', () => {
+            backButton.style.background = 'rgb(240, 250, 245)';
+            backButton.style.borderColor = 'rgb(196, 230, 214)';
+            backButton.style.boxShadow = '0 6px 14px rgba(0, 0, 0, 0.08)';
+            backButton.style.transform = 'translateY(-1px)';
+        });
+        backButton.addEventListener('mouseleave', () => {
+            backButton.style.background = 'rgb(248, 252, 250)';
+            backButton.style.borderColor = 'rgb(226, 240, 233)';
+            backButton.style.boxShadow = 'none';
             backButton.style.transform = 'translateY(0)';
-        };
+        });
+        sidebar.appendChild(backButton);
 
-        document.body.appendChild(backButton);
-    };
+        // Create navigation list
+        const navList = document.createElement('div');
+        navList.className = 'sidebar-nav-list';
 
-    addBackButton();
-});
+        sortedCategories.forEach(category => {
+            const categorySection = document.createElement('div');
+            categorySection.className = 'sidebar-category-section';
+            categorySection.dataset.category = category;
+
+            // Category header (collapsible)
+            const categoryHeader = document.createElement('button');
+            categoryHeader.className = 'sidebar-category-header';
+            categoryHeader.setAttribute('aria-expanded', 'false');
+            categoryHeader.innerHTML = `
+                <span class="sidebar-category-icon">▼</span>
+                <span class="sidebar-category-name">${category}</span>
+                <span class="sidebar-category-count">${groupedByCategory[category].length}</span>
+            `;
+
+            // Category content - collapsed by default
+            const categoryContent = document.createElement('div');
+            categoryContent.className = 'sidebar-category-content';
+            categoryContent.style.display = 'none'; // Collapsed by default
+
+            // Track if this category contains the active document
+            let hasActiveDocument = false;
+
+            // Maintain original order from docs_index.json (don't sort alphabetically)
+            // Files are already in the correct order as they appear in the overview
+            const sortedFiles = groupedByCategory[category].sort((a, b) => {
+                const orderA = fileOrderMap.get(a.path) ?? Infinity;
+                const orderB = fileOrderMap.get(b.path) ?? Infinity;
+                return orderA - orderB;
+            });
+
+            sortedFiles.forEach(file => {
+                const link = document.createElement('a');
+                // Build proper MkDocs URL: remove .md extension and add trailing slash
+                const filePathWithoutExt = file.path.replace(/\.md$/, '');
+                // Construct relative URL - MkDocs converts .md files to directories
+                link.href = `../${filePathWithoutExt}/`;
+                link.className = 'sidebar-nav-link';
+                link.textContent = file.title || file.path.replace(/\.md$/, '');
+
+                // Highlight current page - better matching logic
+                const filePathNormalized = filePathWithoutExt.toLowerCase();
+                const currentPathNormalized = currentFileName.toLowerCase();
+                const currentFullPath = currentPath.toLowerCase();
+
+                if (filePathNormalized === currentPathNormalized ||
+                    currentFullPath.includes(filePathNormalized) ||
+                    currentFullPath.endsWith(filePathNormalized)) {
+                    link.classList.add('active');
+                    // Mark that this category contains the active document
+                    hasActiveDocument = true;
+                }
+
+                link.addEventListener('click', (e) => {
+                    // Save current sidebar state before navigation
+                    const expandedCategories = [];
+                    document.querySelectorAll('.sidebar-category-section').forEach(section => {
+                        const header = section.querySelector('.sidebar-category-header');
+                        const content = section.querySelector('.sidebar-category-content');
+                        if (header && content && content.style.display !== 'none') {
+                            const catName = section.dataset.category;
+                            if (catName) {
+                                expandedCategories.push(catName);
+                            }
+                        }
+                    });
+
+                    // Save scroll position of the sidebar
+                    const navList = document.querySelector('.sidebar-nav-list');
+                    const scrollPosition = navList ? navList.scrollTop : 0;
+
+                    try {
+                        localStorage.setItem(savedStateKey, JSON.stringify(expandedCategories));
+                        localStorage.setItem(scrollPositionKey, scrollPosition.toString());
+                    } catch (e) {
+                        console.warn('Could not save sidebar state to localStorage', e);
+                    }
+
+                    // Allow default navigation to happen
+                    // The page will reload and show the new document
+                    // Update active state will happen on page load
+                    // Close sidebar on mobile after click
+                    if (window.innerWidth <= 1219) {
+                        sidebar.classList.remove('sidebar-open');
+                    }
+                });
+
+                categoryContent.appendChild(link);
+            });
+
+            // Determine initial state: expand if has active document OR if it was saved as expanded
+            const shouldExpand = hasActiveDocument || savedExpandedCategories.includes(category);
+
+            if (shouldExpand) {
+                categoryContent.style.display = 'block';
+                categoryHeader.setAttribute('aria-expanded', 'true');
+                const icon = categoryHeader.querySelector('.sidebar-category-icon');
+                if (icon) icon.style.transform = 'rotate(0deg)';
+            } else {
+                // Collapsed state - icon rotated
+                categoryContent.style.display = 'none';
+                categoryHeader.setAttribute('aria-expanded', 'false');
+                const icon = categoryHeader.querySelector('.sidebar-category-icon');
+                if (icon) icon.style.transform = 'rotate(-90deg)';
+            }
+
+            // Function to save sidebar state
+            const saveSidebarState = () => {
+                const expandedCategories = [];
+                document.querySelectorAll('.sidebar-category-section').forEach(section => {
+                    const header = section.querySelector('.sidebar-category-header');
+                    const content = section.querySelector('.sidebar-category-content');
+                    if (header && content && content.style.display !== 'none') {
+                        const catName = section.dataset.category;
+                        if (catName) {
+                            expandedCategories.push(catName);
+                        }
+                    }
+                });
+                try {
+                    localStorage.setItem(savedStateKey, JSON.stringify(expandedCategories));
+                } catch (e) {
+                    console.warn('Could not save sidebar state to localStorage', e);
+                }
+            };
+
+            // Toggle category on header click
+            categoryHeader.addEventListener('click', () => {
+                const isExpanded = categoryContent.style.display !== 'none';
+                categoryContent.style.display = isExpanded ? 'none' : 'block';
+                const icon = categoryHeader.querySelector('.sidebar-category-icon');
+                icon.style.transform = isExpanded ? 'rotate(-90deg)' : 'rotate(0deg)';
+                categoryHeader.setAttribute('aria-expanded', !isExpanded);
+                // Save state when user manually toggles
+                saveSidebarState();
+            });
+
+            categorySection.appendChild(categoryHeader);
+            categorySection.appendChild(categoryContent);
+            navList.appendChild(categorySection);
+        });
+
+        sidebar.appendChild(navList);
+
+        // Insert sidebar into page
+        // Try to find the main content area in MkDocs structure
+        const mainInner = document.querySelector('.md-main__inner');
+        const mainContent = document.querySelector('.md-content__inner') || document.querySelector('.md-content');
+
+        if (mainContent && mainInner) {
+            // Create wrapper for sidebar and content
+            const wrapper = document.createElement('div');
+            wrapper.className = 'docs-layout-wrapper';
+
+            // Get the parent container (usually .md-content)
+            const contentParent = mainContent.parentElement;
+
+            // Insert wrapper before mainContent
+            contentParent.insertBefore(wrapper, mainContent);
+
+            // Move main content into wrapper
+            wrapper.appendChild(sidebar);
+            wrapper.appendChild(mainContent);
+
+            // Restore scroll position after sidebar is inserted into DOM
+            // Use setTimeout to ensure DOM is ready and layout is calculated
+            setTimeout(() => {
+                const navListElement = document.querySelector('.sidebar-nav-list');
+                if (navListElement && savedScrollPosition > 0) {
+                    navListElement.scrollTop = savedScrollPosition;
+                } else if (navListElement) {
+                    // If no saved position, scroll to active link if it exists
+                    const activeLink = navListElement.querySelector('.sidebar-nav-link.active');
+                    if (activeLink) {
+                        // Scroll to active link with some offset from top
+                        const linkOffset = activeLink.offsetTop;
+                        const containerHeight = navListElement.clientHeight;
+                        const scrollPosition = Math.max(0, linkOffset - containerHeight / 3);
+                        navListElement.scrollTop = scrollPosition;
+                    }
+                }
+            }, 150);
+
+            // Add toggle button for mobile
+            const toggleButton = document.createElement('button');
+            toggleButton.className = 'sidebar-toggle';
+            toggleButton.innerHTML = '☰';
+            toggleButton.setAttribute('aria-label', 'Toggle navigation');
+            toggleButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                sidebar.classList.toggle('sidebar-open');
+            });
+
+            const header = document.querySelector('.md-header') || document.body;
+            if (header) {
+                // Check if toggle button already exists
+                if (!header.querySelector('.sidebar-toggle')) {
+                    header.appendChild(toggleButton);
+                }
+            }
+
+            // Close sidebar when clicking outside on mobile
+            const handleOutsideClick = (e) => {
+                if (window.innerWidth <= 1219) { // 76.25em = 1219px
+                    if (!sidebar.contains(e.target) && !toggleButton.contains(e.target)) {
+                        sidebar.classList.remove('sidebar-open');
+                    }
+                }
+            };
+
+            // Use capture phase to catch clicks early
+            document.addEventListener('click', handleOutsideClick, true);
+
+            // Close sidebar when window is resized to desktop
+            let resizeTimer;
+            window.addEventListener('resize', () => {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(() => {
+                    if (window.innerWidth > 1219) {
+                        sidebar.classList.remove('sidebar-open');
+                    }
+                }, 250);
+            });
+        } else {
+            // Fallback: try to insert directly into body or main content
+            const fallbackContainer = document.querySelector('.md-content') || document.querySelector('main') || document.body;
+            if (fallbackContainer) {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'docs-layout-wrapper';
+                wrapper.style.display = 'flex';
+
+                // Insert before the first child
+                if (fallbackContainer.firstChild) {
+                    fallbackContainer.insertBefore(wrapper, fallbackContainer.firstChild);
+                } else {
+                    fallbackContainer.appendChild(wrapper);
+                }
+
+                wrapper.appendChild(sidebar);
+
+                // Move existing content into wrapper
+                const existingContent = Array.from(fallbackContainer.children).filter(
+                    child => !child.classList.contains('docs-layout-wrapper')
+                );
+                existingContent.forEach(child => {
+                    if (child !== wrapper) {
+                        wrapper.appendChild(child);
+                    }
+                });
+
+                // Restore scroll position after sidebar is inserted into DOM (fallback case)
+                setTimeout(() => {
+                    const navListElement = document.querySelector('.sidebar-nav-list');
+                    if (navListElement && savedScrollPosition > 0) {
+                        navListElement.scrollTop = savedScrollPosition;
+                    } else if (navListElement) {
+                        // If no saved position, scroll to active link if it exists
+                        const activeLink = navListElement.querySelector('.sidebar-nav-link.active');
+                        if (activeLink) {
+                            // Scroll to active link with some offset from top
+                            const linkOffset = activeLink.offsetTop;
+                            const containerHeight = navListElement.clientHeight;
+                            const scrollPosition = Math.max(0, linkOffset - containerHeight / 3);
+                            navListElement.scrollTop = scrollPosition;
+                        }
+                    }
+                }, 150);
+            }
+        }
+
+    } catch (error) {
+        console.error('Error building sidebar:', error);
+    }
+}
+
+// Filter sidebar based on search input
+function filterSidebar(searchTerm) {
+    const term = searchTerm.toLowerCase().trim();
+    const categorySections = document.querySelectorAll('.sidebar-category-section');
+
+    categorySections.forEach(section => {
+        const links = section.querySelectorAll('.sidebar-nav-link');
+        let hasVisibleLinks = false;
+
+        links.forEach(link => {
+            const text = link.textContent.toLowerCase();
+            if (!term || text.includes(term)) {
+                link.style.display = '';
+                hasVisibleLinks = true;
+            } else {
+                link.style.display = 'none';
+            }
+        });
+
+        // Show/hide category if it has visible links
+        if (hasVisibleLinks) {
+            section.style.display = '';
+            // Auto-expand categories with matches
+            if (term) {
+                const content = section.querySelector('.sidebar-category-content');
+                content.style.display = 'block';
+                const header = section.querySelector('.sidebar-category-header');
+                const icon = header.querySelector('.sidebar-category-icon');
+                icon.style.transform = 'rotate(0deg)';
+            }
+        } else {
+            section.style.display = 'none';
+        }
+    });
+}

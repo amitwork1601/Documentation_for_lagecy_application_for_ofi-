@@ -12,7 +12,7 @@ This documentation has been automatically generated from multiple code repositor
 
 ## Features
 
-✨ **AI-Enhanced Summaries** - Intelligent descriptions powered by Groq AI
+✨ **AI-Enhanced Summaries** - Intelligent descriptions powered by Claude Sonnet 4.5 AI
 
 📦 **Multi-Repository Support** - Documentation from all three repositories in one place
 
@@ -57,7 +57,7 @@ The documentation is organized into the following categories:
 This documentation was automatically generated using:
 
 - **Parser**: Custom multi-language parsers for PHP, JavaScript, Vue, and more
-- **AI Enhancement**: Claude Sonnet 4.5 AI  for intelligent summaries
+- **AI Enhancement**: Claude Sonnet 4.5 AI for intelligent summaries
 - **Generator**: Python-based documentation generator
 - **Output**: MkDocs Material theme
 
