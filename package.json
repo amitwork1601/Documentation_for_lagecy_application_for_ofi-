@@ -4,7 +4,8 @@
     "description": "Interactive documentation explorer for legacy application",
     "scripts": {
         "deploy": "vercel --prod",
-        "dev": "python -m mkdocs serve"
+        "dev": "python -m mkdocs serve",
+        "build-verify": "tsc --noEmit"
     },
     "keywords": [
         "documentation",
@@ -12,5 +13,15 @@
         "viewer"
     ],
     "author": "",
-    "license": "MIT"
+    "license": "MIT",
+    "dependencies": {
+        "next": "^14.0.0",
+        "react": "^18.0.0",
+        "react-dom": "^18.0.0"
+    },
+    "devDependencies": {
+        "@types/node": "^20.0.0",
+        "@types/react": "^18.0.0",
+        "typescript": "^5.0.0"
+    }
 }

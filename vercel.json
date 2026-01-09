@@ -1,5 +1,5 @@
 {
-    "buildCommand": "pip install -r requirements.txt && python -m mkdocs build && cp -r docs/viewer site/ && cp docs/*.md site/ && cp docs/docs_index.json site/",
+    "buildCommand": "pip install -r requirements.txt && python -m mkdocs build && cp -r docs/viewer site/ && cp docs/*.md site/ && cp docs/docs_index.json site/ && cp docs/login.html site/",
     "outputDirectory": "site",
-    "installCommand": "pip install --upgrade pip"
+    "installCommand": "npm install && pip install --upgrade pip"
 }
