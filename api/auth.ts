@@ -18,14 +18,19 @@ export default async function handler(request: Request) {
         // Get credentials from environment variables
         // ADMIN_USERNAME and ADMIN_PASSWORD must be set in Vercel Project Settings
         const validUsername = process.env.ADMIN_USERNAME || 'admin'; // Default fallback for unsafe local dev only
-        const validPassword = process.env.ADMIN_PASSWORD;
+        // Check for case variations
+        const validPassword = process.env.ADMIN_PASSWORD || process.env.admin_password;
 
         if (!validPassword) {
             console.error("ADMIN_PASSWORD environment variable is not set.");
-            // Return more info to help debug (in production this might leak info that it's just missing, but acceptable for this stage)
-            // Return more info to help debug (in production this might leak info that it's just missing, but acceptable for this stage)
+
+            // Debug available keys (safe filter)
+            const availableKeys = Object.keys(process.env)
+                .filter(k => k.startsWith('ADMIN_') || k.startsWith('admin_'))
+                .join(', ');
+
             return new Response(JSON.stringify({
-                error: 'Server configuration error: ADMIN_PASSWORD not set. Did you redeploy after setting environment variables?',
+                error: `Server configuration error: ADMIN_PASSWORD not set. Found keys: [${availableKeys}]. Did you set it in the correct environment (Prod/Preview)?`,
             }), { status: 500 });
         }
 
