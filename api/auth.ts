@@ -23,9 +23,9 @@ export default async function handler(request: Request) {
         if (!validPassword) {
             console.error("ADMIN_PASSWORD environment variable is not set.");
             // Return more info to help debug (in production this might leak info that it's just missing, but acceptable for this stage)
+            // Return more info to help debug (in production this might leak info that it's just missing, but acceptable for this stage)
             return new Response(JSON.stringify({
-                error: 'Server configuration error',
-                details: 'ADMIN_PASSWORD not set. Did you redeploy after setting environment variables?'
+                error: 'Server configuration error: ADMIN_PASSWORD not set. Did you redeploy after setting environment variables?',
             }), { status: 500 });
         }
 
