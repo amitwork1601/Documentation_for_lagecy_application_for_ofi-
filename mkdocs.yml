@@ -2,6 +2,8 @@ site_name: Legacy Documentation Explorer
 site_description: Auto-generated documentation for multi-repo legacy systems
 site_url: ""
 # Force fresh build
+validation:
+  omitted_files: ignore
 
 theme:
   name: material
